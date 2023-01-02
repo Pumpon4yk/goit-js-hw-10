@@ -3,6 +3,7 @@ import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import debounce from 'lodash.debounce';
 import FetchCountries from './fetchCountries'
 import listTml from "./templates/list.hbs"
+import cardTemp from "./templates/card.hbs"
 
 
 const DEBOUNCE_DELAY = 300;
@@ -17,6 +18,7 @@ const refs ={
 const fetchCountries = new FetchCountries()
 
 refs.input.addEventListener('input', debounce(inputSearch, DEBOUNCE_DELAY))
+refs.list.addEventListener('click', onClick)
 
 function inputSearch(e){
     const country = e.target.value.trim()
@@ -35,6 +37,28 @@ function inputSearch(e){
     })
 }
 
+
+function onClick(e) {
+    if(!e.target.classList.contains('text')){
+        return
+    }
+
+    const count= e.target.textContent
+    refs.input.value = count
+
+    fetchCountries.name = count;
+
+    fetchCountries.fetch()
+    .then(arr => checkNamecountry(arr))
+    .then(data => {
+        arreyCheckLength(data);
+        return data
+    })
+}
+
+function checkNamecountry(arr) {
+    return arr.filter(el => el.name.common.toLowerCase() === refs.input.value.toLowerCase())
+}
 
 function arreyCheckLength(arr) {
     if (arr.length > 10) {
@@ -59,17 +83,10 @@ function arreyCheckLength(arr) {
 
 function createCard(arr) {
     const {flags: {svg:icon}, name: {official, common}, capital, population, languages} = arr;
-    const card = `<div class="container">
-    <h2 class="country">
-    <img class="flag" src="${icon}" alt="flag"> 
-        ${official}</h2>
-    <p class="titel"><span class="span">Capital: </span>${capital}</p>
-    <p class="titel"><span class="span">Population: </span>${population}</p>
-    <p class="titel"><span class="span">Languages: </span>${Object.values(languages)}</p>
-</div>`
 
-    refs.card.innerHTML = card;
+    return refs.card.innerHTML = cardTemp({icon, official, capital, population, languages: Object.values(languages) })
 }
+
 
 function appendList(arr) {
     clearCard()
